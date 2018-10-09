@@ -28,6 +28,9 @@ def parse_opts():
                                 'line' variable. This is the default.''')
     parser.add_argument('-p', '--print', action='store_true', dest='print_lines', default=True,
                         help='''Print the resulting line. This is the default.''')
+    parser.add_argument(      '--no-print', action='store_false', dest='print_lines',
+                        help='''Don't automatically print the resulting line, the script knows what
+                                to do with it''')
     parser.add_argument('-s', '--setup', default=None,
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
