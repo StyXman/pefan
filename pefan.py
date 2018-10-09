@@ -3,6 +3,9 @@
 import sys
 import argparse
 
+import logging
+from logging import debug, info, exception
+long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 
 def parse_opts():
     parser = argparse.ArgumentParser(description='''Tries to emulate Perl's (Yikes!) -epFan switches.''')
@@ -10,6 +13,8 @@ def parse_opts():
     parser.add_argument('-a', '--split', action='store_true',
                         help='''Turns on autosplit, so the line is split in elements. The list of e
                                 lements go in the 'data' variable.''')
+    parser.add_argument(      '--debug', action='store_true',
+                        help='''Enable debugging info in the stderr.''')
     parser.add_argument('-e', '--script', required=True,
                         help='''The scipt to run inside the loop.''')
     parser.add_argument('-F', '--split-char', default=None,
@@ -34,12 +39,16 @@ def parse_opts():
     parser.add_argument('-s', '--setup', default=None,
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
+    parser.add_argument('--test', action='store_true', help='''Run internal test suite.''')
+
     parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
                         help='''Files to process. If ommited or file name is '-', stdin is used. Notice
                                 you can use '-' at any point in the list; f.i. "foo bar - baz".''')
 
     opts = parser.parse_args(sys.argv[1:])
-    # print(opts)
+    if opts.debug:
+        logging.basicConfig(level=logging.DEBUG, format=long_format)
+    debug(opts)
 
     # post proc
     # if no files, use stdin
@@ -63,7 +72,7 @@ def chomp(s):
 
 def import_names(opts, globs):
     for module_spec in opts.module_specs:
-        # print(module_spec)
+        debug(module_spec)
         try:
             module_name, names_spec = module_spec.split(',', 1)
         except ValueError:
@@ -77,11 +86,11 @@ def import_names(opts, globs):
                 # py2's __import__() does not provide a way to specify as_name
                 module = __import__(module_name)
                 globs[as_name] = module
-                # print(globs)
+                debug(globs)
             except ValueError:
                 module = __import__(module_name)
                 globs[module_name] = module
-                # print(globs)
+                debug(globs)
         else:
             # no as_name for module_name
             names =  names_spec.split(',')
@@ -90,18 +99,18 @@ def import_names(opts, globs):
                     name, as_name = name_spec.split(':')
                     module = __import__(module_name, globs, locals(), [name])
                     globs[as_name] = o
-                    # print(globs)
+                    debug(globs)
                 except ValueError:
                     module = __import__(module_name, globs, locals(), [name_spec])
 
-                    # print(module)
+                    debug(module)
                     globs[name_spec] = getattr(module,  name_spec)
-                    # print(globs)
+                    debug(globs)
 
 
 if __name__ == '__main__':
     opts = parse_opts()
-    # print(opts)
+    debug(opts)
 
     globs = dict(globals())
     locs = {}
@@ -131,6 +140,7 @@ if __name__ == '__main__':
             if opts.split:
                 locs['data'] = line.split(opts.split_char)
 
+            debug(repr(opts.script))
             exec(opts.script, globs, locs)
             line = chomp(locs['line'])
 
