@@ -2,7 +2,8 @@
 
 import sys
 import argparse
-import random
+from random import random
+from datetime import datetime
 
 import logging
 from logging import debug, info, exception
@@ -184,7 +185,9 @@ if random.random() < 0.01:
 
 # finished with that mess
 def parse_opts():
-    parser = argparse.ArgumentParser(description='''Tries to emulate Perl's (Yikes!) -epFan switches.''')
+    parser = argparse.ArgumentParser(description='''Tries to emulate Perl's (Yikes!) -epFan switches.''',
+                                     epilog='''FORMAT can use Python's strftime()'s codes
+                                               (see https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior).''')
 
     parser.add_argument('-a', '--split', action='store_true',
                         help='''Turns on autosplit, so the line is split in elements. The list of e
@@ -205,7 +208,7 @@ def parse_opts():
     parser.add_argument('-m', dest='module_specs', metavar='MODULE_SPEC',
                         action='append', default = [], help='''Same as [-M|--import]''')
     parser.add_argument('-N', '--enumerate-lines', action='store_true', default=False,
-                        help='''Prepend each line with its line number, like less -N does.''')  # '       1 '
+                        help='''Prepend each line with its line number, like less -N does.''')
     parser.add_argument('-n', '--iterate', action='store_true', default=True,
                         help='''Iterate over all the lines of inputs. Each line is assigned in the
                                 'line' variable. This is the default.''')
@@ -220,6 +223,9 @@ def parse_opts():
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
     parser.add_argument(      '--test', action='store_true', help='''Run internal test suite.''')
+    parser.add_argument('-t', '--timestamp', nargs='?', metavar='FORMAT', default=None,
+                        const='%Y-%m-%dT%H:%M:%S.%f%z',
+                        help='''Prepend a timestamp using FORMAT. By default prints it in ISO-8601.''')
 
     parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
                         help='''Files to process. If ommited or file name is '-', stdin is used. Notice
@@ -333,7 +339,12 @@ if __name__ == '__main__':
             line = locs['line']
 
             if ( opts.print_lines and (not opts.ignore_empty or line != '') and
-                 (opts.random == 1 or random.random() < opts.random) ):
+                 (opts.random == 1 or random() < opts.random) ):
+
+                if opts.timestamp is not None:
+                    time = datetime.now()
+                    ts = time.strftime(opts.timestamp)
+                    line = ts + ': ' + line
 
                 if opts.enumerate_lines:
                     # '       1 '
