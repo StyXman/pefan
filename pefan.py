@@ -323,14 +323,14 @@ if __name__ == '__main__':
         locs['file'] = file
 
         for line in file:
-            locs['line'] = line
+            locs['line'] = chomp(line)
 
             if opts.split:
                 locs['data'] = line.split(opts.split_char)
 
             debug(repr(opts.script))
             exec(opts.script, globs, locs)
-            line = chomp(locs['line'])
+            line = locs['line']
 
             if ( opts.print_lines and (not opts.ignore_empty or line != '') and
                  (opts.random == 1 or random.random() < opts.random) ):
