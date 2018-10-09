@@ -203,6 +203,8 @@ def parse_opts():
                                 variant. MODULE or NAMEs can have a :AS_NAME suffix.''')
     parser.add_argument('-m', dest='module_specs', metavar='MODULE_SPEC',
                         action='append', default = [], help='''Same as [-M|--import]''')
+    parser.add_argument('-N', '--enumerate-lines', action='store_true', default=False,
+                        help='''Prepend each line with its line number, like less -N does.''')  # '       1 '
     parser.add_argument('-n', '--iterate', action='store_true', default=True,
                         help='''Iterate over all the lines of inputs. Each line is assigned in the
                                 'line' variable. This is the default.''')
@@ -302,6 +304,8 @@ if __name__ == '__main__':
     if opts.setup is not None:
         exec(opts.setup, globs, locs)
 
+    lineno = 1
+
     for file in opts.files:
         if file == '-':
             file = sys.stdin
@@ -325,6 +329,10 @@ if __name__ == '__main__':
             exec(opts.script, globs, locs)
             line = chomp(locs['line'])
 
+                if opts.enumerate_lines:
+                    # '       1 '
+                    line = ("%8d " % lineno) + line
+                    lineno += 1
 
             if opts.print_lines and (not opts.ignore_empty or line != ''):
                 print(line)
