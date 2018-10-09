@@ -2,6 +2,7 @@
 
 import sys
 import argparse
+import random
 
 import logging
 from logging import debug, info, exception
@@ -213,6 +214,8 @@ def parse_opts():
     parser.add_argument(      '--no-print', action='store_false', dest='print_lines',
                         help='''Don't automatically print the resulting line, the script knows what
                                 to do with it''')
+    parser.add_argument('-r', '--random', type=float, default=1,
+                        help='''Print only a fraction of the output lines.''')
     parser.add_argument('-s', '--setup', default=None,
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
@@ -329,10 +332,12 @@ if __name__ == '__main__':
             exec(opts.script, globs, locs)
             line = chomp(locs['line'])
 
+            if ( opts.print_lines and (not opts.ignore_empty or line != '') and
+                 (opts.random == 1 or random.random() < opts.random) ):
+
                 if opts.enumerate_lines:
                     # '       1 '
                     line = ("%8d " % lineno) + line
                     lineno += 1
 
-            if opts.print_lines and (not opts.ignore_empty or line != ''):
                 print(line)
