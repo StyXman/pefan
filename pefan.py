@@ -191,7 +191,7 @@ def parse_opts():
     parser.add_argument(      '--debug', action='store_true',
                         help='''Enable debugging info in the stderr.''')
     parser.add_argument('-e', '--script', required=True,
-                        help='''The scipt to run inside the loop.''')
+                        help='''The script to run inside the loop.''')
     parser.add_argument('-F', '--split-char', default=None,
                         help='''The field delimiter. This implies [-a|--split].''')
     parser.add_argument('-i', '--ignore-empty', action='store_true',
