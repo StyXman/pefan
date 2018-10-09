@@ -219,7 +219,7 @@ def parse_opts():
     parser.add_argument('-s', '--setup', default=None,
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
-    parser.add_argument('--test', action='store_true', help='''Run internal test suite.''')
+    parser.add_argument(      '--test', action='store_true', help='''Run internal test suite.''')
 
     parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
                         help='''Files to process. If ommited or file name is '-', stdin is used. Notice
