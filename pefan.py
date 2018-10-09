@@ -7,6 +7,181 @@ import logging
 from logging import debug, info, exception
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 
+
+# states for the state machine
+class NormalCode:
+    ''''''
+
+class SemiColon:
+    ''';'''
+
+class LineSplit:
+    ''' '''
+
+class Block1:
+    ''' '''
+
+class BlockStart2:
+    '''{'''
+
+class BlockStart3:
+    ''' '''
+
+class BlockEnd2:
+    '''}'''
+
+class BlockEnd3:
+    ''' '''
+
+class Quoted1:
+    """'"""
+
+class Quoted2:
+    """'"""
+
+class Quoted3:
+    """'"""
+
+
+delta = {
+    (NormalCode,  ';'): SemiColon,
+    (SemiColon,   ' '): LineSplit,
+
+    (NormalCode,  ' '): Block1,
+    (Block1,      ' '): Block1,
+
+    (Block1,      '{'): BlockStart2,
+    (BlockStart2, ' '): BlockStart3,
+    (BlockStart3, ' '): BlockStart3,
+
+    (Block1,      '}'): BlockEnd2,
+    (BlockEnd2,   ' '): BlockEnd3,
+    (BlockEnd3,   ' '): BlockEnd3,
+
+    (NormalCode,  "'"): Quoted1,
+    (Quoted1,     "'"): Quoted2,
+    (Quoted3,     "'"): Quoted3,
+}
+
+
+def make_line(indent, part):
+    return ('    ' * indent) + (''.join(part))
+
+
+def braced2python(s):
+    indent = 0
+    # we'll do the join() trick, twice
+    parts = []
+    part = []
+    state = NormalCode
+
+    # the easiest way I can see to do this is to do a char scan
+    # whith a whole state machine full of hacks and special cases
+    for index, c in enumerate(s):
+        new_state = delta.get((state, c), None)
+        debug([state.__name__, c, new_state])
+        part.append(c)
+        debug(part)
+
+        if new_state is not None:
+            state = new_state
+
+            if state == LineSplit:
+                # backtrack, remove '; '
+                part = part[:-2]
+                parts.append(make_line(indent, part))
+                part = []
+
+                state = NormalCode
+
+            elif state == BlockStart3:
+                # backtrack, remove ' { '
+                part = part[:-3]
+                debug(part)
+                # and add the trailing colon
+                part.append(':')
+                debug(part)
+
+                parts.append(make_line(indent, part))
+                part = []
+                indent += 1
+
+                # this is a shortcut
+                state = NormalCode
+            elif state == BlockEnd3:
+                part = part[:-3]
+                debug(part)
+
+                parts.append(make_line(indent, part))
+                part = []
+                indent -= 1
+
+                state = Block1
+        else:
+            state = NormalCode
+
+        debug([part, parts])
+
+    # handle last ' }'
+    if state == BlockEnd2:
+        part = part[:-2]
+        debug(part)
+
+    if len(part) != 0:
+        parts.append(make_line(indent, part))
+    else:
+        # HACK to add the trailing \n
+        parts.append('')
+
+    return '\n'.join(parts)
+
+
+def ass(a, b):
+    if not a == b:
+        print(a)
+        print(b)
+        raise AssertionError((a, b))
+
+
+def test():
+    ass(braced2python('''if True { a = 3 } '''), '''if True:
+    a = 3
+''')
+
+    ass(braced2python('''if True { a = 3; if False { b = 4 } else { c = 5 } }'''), '''if True:
+    a = 3
+    if False:
+        b = 4
+    else:
+        c = 5
+''')
+    return
+
+    ass(braced2python('''if True { '''), '''if True:
+''')
+
+    c = '''if True { ok = ' {  } ' } else { if False { ok_nok = " {  } "; exit() } else { ok_ok = """ { a } """ } }'''
+    assert braced2python(c) == '''if True:
+    ok = True
+else:
+    if False:
+        ok_nok = True
+        exit()
+    else
+        ok_ok = True
+'''
+
+    c = '''line = " ".join(data[5:-10]); if random.random() < 0.01 { print(line) }'''
+    assert braced2python(c) == '''line = " ".join(data[5:-10])
+if random.random() < 0.01:
+    print(line)
+'''
+
+    print('A-OK')
+    sys.exit(0)
+
+
+# finished with that mess
 def parse_opts():
     parser = argparse.ArgumentParser(description='''Tries to emulate Perl's (Yikes!) -epFan switches.''')
 
@@ -57,6 +232,11 @@ def parse_opts():
 
     if opts.split_char is not None:
         opts.split = True
+
+    opts.script = braced2python(opts.script)
+
+    if opts.setup is not None:
+        opts.setup = braced2python(opts.setup)
 
     return opts
 
@@ -112,13 +292,14 @@ if __name__ == '__main__':
     opts = parse_opts()
     debug(opts)
 
+    if opts.test:
+        test()
+
     globs = dict(globals())
     locs = {}
     import_names(opts, globs)
 
     if opts.setup is not None:
-        opts.setup = braced2python(opts.setup)
-
         exec(opts.setup, globs, locs)
 
     for file in opts.files:
