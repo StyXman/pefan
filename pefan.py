@@ -146,6 +146,13 @@ def ass(a, b):
 
 
 def test():
+    ass(automatic_switches(['--foo']), ({ 'foo': True }, []))
+    ass(automatic_switches(['--foo', 'bar']), ({ 'foo': 'bar' }, []))
+    ass(automatic_switches(['--foo', 'bar', 'baz']), ({ 'foo': 'bar' }, [ 'baz' ]))
+    ass(automatic_switches(['moo', '--foo', 'bar', 'baz']), ({ 'foo': 'bar' }, [ 'moo', 'baz' ]))
+    ass(automatic_switches(['--foo', 'bar', 'baz', '--moo']), ({ 'foo': 'bar', 'moo': True }, [ 'baz' ]))
+    ass(automatic_switches(['--foo', 'bar', 'baz', '--moo', 'quux']), ({ 'foo': 'bar', 'moo': 'quux' }, [ 'baz' ]))
+
     ass(braced2python('''if True { a = 3 } '''), '''if True:
     a = 3
 ''')
@@ -185,9 +192,12 @@ if random.random() < 0.01:
 
 # finished with that mess
 def parse_opts():
-    parser = argparse.ArgumentParser(description='''Tries to emulate Perl's (Yikes!) -epFan switches.''',
+    parser = argparse.ArgumentParser(description='''Tries to emulate Perl's (Yikes!) -peFan switches and more.''',
                                      epilog='''FORMAT can use Python's strftime()'s codes
-                                               (see https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior).''')
+                                               (see https://docs.python.org/3/library/datetime.html#strftime-and-strptime-behavior).
+
+                                               Automatic switches must be passed after all the other options
+                                               recognized by pefan.''')
 
     parser.add_argument('-a', '--split', action='store_true',
                         help='''Turns on autosplit, so the line is split in elements. The list of e
@@ -219,6 +229,9 @@ def parse_opts():
                                 to do with it''')
     parser.add_argument('-r', '--random', type=float, default=1,
                         help='''Print only a fraction of the output lines.''')
+    parser.add_argument('-S', '--automatic-switches', action='store_true',
+                        help='''Automaticalle parse --foo switches. This creates a variable called 'foo'
+                                with value True; --foo[=| ]bar stores 'bar' in 'foo'.''')
     parser.add_argument('-s', '--setup', default=None,
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
@@ -227,14 +240,25 @@ def parse_opts():
                         const='%Y-%m-%dT%H:%M:%S.%f%z',
                         help='''Prepend a timestamp using FORMAT. By default prints it in ISO-8601.''')
 
-    parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
-                        help='''Files to process. If ommited or file name is '-', stdin is used. Notice
-                                you can use '-' at any point in the list; f.i. "foo bar - baz".''')
+    # parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
+    #                     help='''Files to process. If ommited or file name is '-', stdin is used. Notice
+    #                             you can use '-' at any point in the list; f.i. "foo bar - baz".''')
 
-    opts = parser.parse_args(sys.argv[1:])
+    opts, more = parser.parse_known_args()
+    switches = {}
+
     if opts.debug:
         logging.basicConfig(level=logging.DEBUG, format=long_format)
-    debug(opts)
+
+    debug((opts, more))
+
+    if opts.automatic_switches:
+        switches, more = automatic_switches(more)
+    debug((switches, more))
+
+    opts.files = more
+
+    debug((opts, switches))
 
     # post proc
     # if no files, use stdin
@@ -249,7 +273,36 @@ def parse_opts():
     if opts.setup is not None:
         opts.setup = braced2python(opts.setup)
 
-    return opts
+    return opts, switches
+
+
+def automatic_switches(args):
+    index = 0
+    switches = {}
+    extra = []
+    name = None
+
+    while index < len(args):
+        arg = args[index]
+
+        if arg.startswith('--'):
+            name = arg[2:]
+            if '=' in name:
+                name, value = name.split('=', 1)
+                switches[name] = value
+                name = None
+            else:
+                switches[name] = True
+        else:
+            if name is not None:
+                switches[name] = arg
+                name = None
+            else:
+                extra.append(arg)
+
+        index += 1
+
+    return switches, extra
 
 
 def chomp(s):
@@ -300,14 +353,13 @@ def import_names(opts, globs):
 
 
 if __name__ == '__main__':
-    opts = parse_opts()
-    debug(opts)
+    opts, switches = parse_opts()
 
     if opts.test:
         test()
 
     globs = dict(globals())
-    locs = {}
+    locs = switches
     import_names(opts, globs)
 
     if opts.setup is not None:
