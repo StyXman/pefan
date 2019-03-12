@@ -206,7 +206,7 @@ def parse_opts():
                                 lements go in the 'data' variable.''')
     parser.add_argument(      '--debug', action='store_true',
                         help='''Enable debugging info in the stderr.''')
-    parser.add_argument('-e', '--script', required=True,
+    parser.add_argument('-e', '--script', default='',
                         help='''The script to run inside the loop.''')
     parser.add_argument('-F', '--split-char', default=None,
                         help='''The field delimiter. This implies [-a|--split].''')
