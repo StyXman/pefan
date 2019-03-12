@@ -199,6 +199,8 @@ def parse_opts():
                                                Automatic switches must be passed after all the other options
                                                recognized by pefan.''')
 
+    parser.add_argument('-A', '--append-logfile', default=None,
+                        help='''Also log lines to a file, appending to the end.''')
     parser.add_argument('-a', '--split', action='store_true',
                         help='''Turns on autosplit, so the line is split in elements. The list of e
                                 lements go in the 'data' variable.''')
@@ -210,6 +212,8 @@ def parse_opts():
                         help='''The field delimiter. This implies [-a|--split].''')
     parser.add_argument('-i', '--ignore-empty', action='store_true',
                         help='''Do not print empty lines.''')
+    parser.add_argument('-l', '--logfile', default=None,
+                        help='''Also log lines to a file.''')
     parser.add_argument('-M', '--import', dest='module_specs', metavar='MODULE_SPEC',
                         action='append', default = [],
                         help='''Import modules before runing any code. MODULE_SPEC can be
@@ -365,6 +369,13 @@ if __name__ == '__main__':
     if opts.setup is not None:
         exec(opts.setup, globs, locs)
 
+    logfile = None
+    if opts.logfile is not None:
+        logfile = open(opts.logfile, 'w+')
+    # if also -append-logfile, then append
+    if opts.append_logfile is not None:
+        logfile = open(opts.append_logfile, 'a+')
+
     lineno = 1
 
     for file in opts.files:
@@ -404,3 +415,6 @@ if __name__ == '__main__':
                     lineno += 1
 
                 print(line)
+
+                if logfile is not None:
+                    logfile.write(line+'\n')
