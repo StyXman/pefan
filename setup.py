@@ -8,10 +8,10 @@ from distutils.core import setup
 
 setup (
     name='pefan',
-    version= 0.1a,
+    version= '0.1a',
     description= 'Run Python code over line-based input streams.',
     long_description='''Similarly to awk, sed -e and perl -e, execute Python code
-    within a loop that reads from input files and print the result at the end.'''
+    within a loop that reads from input files and print the result at the end.''',
     author= 'Marcos Dione',
     author_email= 'mdione@grulic.org.ar',
     url= 'https://github.com/StyXman/pefan',
