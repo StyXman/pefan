@@ -10,6 +10,12 @@ from logging import debug, info, exception
 long_format = "%(asctime)s %(name)16s:%(lineno)-4d (%(funcName)-21s) %(levelname)-8s %(message)s"
 
 
+# support py2
+try:
+    BrokenPipeError
+except NameError:
+    BrokenPipeError = OSError
+
 # states for the state machine
 class NormalCode:
     ''''''
@@ -399,6 +405,10 @@ if __name__ == '__main__':
             except (BrokenPipeError, KeyboardInterrupt):
                 # we're reading from stdin, and the proc at the other end of the pipe died
                 # bail out
+                break
+
+            # py2 support
+            if line == '':
                 break
 
             locs['line'] = chomp(line)
