@@ -206,14 +206,11 @@ def parse_opts():
                                                Automatic switches must be passed after all the other options
                                                recognized by pefan.''')
 
-    # this is quite difficult, next time
-    # parser.add_argument('-0', '--zero-delimited', action='store_true',
-    #                     help='''Input is delimited by \0's, not \n's.''')
     parser.add_argument('-A', '--append-logfile', default=None,
                         help='''Also log lines to a file, appending to the end.''')
     parser.add_argument('-a', '--split', action='store_true',
-                        help='''Turns on autosplit, so the line is split in elements. The list of e
-                                lements go in the 'data' variable.''')
+                        help='''Turns on autosplit, so the line is split in elements. The list of
+                                elements go in the 'data' variable.''')
     parser.add_argument(      '--debug', action='store_true',
                         help='''Enable debugging info in the stderr.''')
     parser.add_argument('-e', '--script', default=None,
@@ -226,7 +223,7 @@ def parse_opts():
                         help='''Also log lines to a file.''')
     parser.add_argument('-M', '--import', dest='module_specs', metavar='MODULE_SPEC',
                         action='append', default = [],
-                        help='''Import modules before runing any code. MODULE_SPEC can be
+                        help='''Import modules before running any code. MODULE_SPEC can be
                                 MODULE or MODULE,NAME,... The latter uses the 'from MODULE import NAME, ...'
                                 variant. MODULE or NAMEs can have a :AS_NAME suffix.''')
     parser.add_argument('-m', dest='module_specs', metavar='MODULE_SPEC',
@@ -248,8 +245,9 @@ def parse_opts():
     parser.add_argument('-R', '--remove-ansi', action='store_true',
                         help='''Remove ANSI escape sequences from the text.''')
     parser.add_argument('-S', '--automatic-switches', action='store_true',
-                        help='''Automaticalle parse --foo switches. This creates a variable called 'foo'
-                                with value True; --foo[=| ]bar stores 'bar' in 'foo'.''')
+                        help='''Parse --foo switches into variables. This creates a variable called 'foo'
+                                with value True; --foo[=| ]bar stores 'bar' in 'foo'. This is a way to
+                                pass arguments to the scripts.''')
     parser.add_argument('-s', '--setup', default=None, metavar='SETUP_SCRIPT',
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
@@ -263,6 +261,8 @@ def parse_opts():
                         help='''Code that runs after all input lines are processed.''')
     parser.add_argument(      '--end', default=None, dest='tear_down', metavar='TEAR_DOWN_SCRIPT',
                         help='''Same as -T|--tear-down.''')
+    # parser.add_argument('-0', '--null', action='store_true',
+    #                     help='''Input items are terminated by a null character instead of by newlines.''')
 
     # parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
     #                     help='''Files to process. If ommited or file name is '-', stdin is used. Notice
@@ -392,6 +392,7 @@ if __name__ == '__main__':
     logfile = None
     if opts.logfile is not None:
         logfile = open(opts.logfile, 'w+')
+
     # if also -append-logfile, then append
     if opts.append_logfile is not None:
         logfile = open(opts.append_logfile, 'a+')
@@ -400,6 +401,9 @@ if __name__ == '__main__':
 
     if opts.remove_ansi:
         # see https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+        # The above regular expression covers all 7-bit ANSI C1 escape sequences, but not
+        # the 8-bit C1 escape sequence openers. The latter are never used in today's UTF-8
+        # world where the same range of bytes have a different meaning.
         remover = re.compile(r'''\x1B[@-_][0-?]*[ -/]*[@-~]''')
 
     for file in opts.files:
