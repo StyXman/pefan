@@ -4,6 +4,7 @@ import sys
 import argparse
 from random import random
 from datetime import datetime
+import re
 
 import logging
 from logging import debug, info, exception
@@ -241,6 +242,8 @@ def parse_opts():
                                 to do with it''')
     parser.add_argument('-r', '--random', type=float, default=1,
                         help='''Print only a fraction of the output lines.''')
+    parser.add_argument('-R', '--remove-ansi', action='store_true',
+                        help='''Remove ANSI escape sequences from the text.''')
     parser.add_argument('-S', '--automatic-switches', action='store_true',
                         help='''Automaticalle parse --foo switches. This creates a variable called 'foo'
                                 with value True; --foo[=| ]bar stores 'bar' in 'foo'.''')
@@ -386,6 +389,10 @@ if __name__ == '__main__':
 
     lineno = 1
 
+    if opts.remove_ansi:
+        # see https://stackoverflow.com/questions/14693701/how-can-i-remove-the-ansi-escape-sequences-from-a-string-in-python
+        remover = re.compile(r'''\x1B[@-_][0-?]*[ -/]*[@-~]''')
+
     for file in opts.files:
         if file == '-':
             file = sys.stdin
@@ -411,7 +418,12 @@ if __name__ == '__main__':
             if line == '':
                 break
 
-            locs['line'] = chomp(line)
+            line = chomp(line)
+
+            if opts.remove_ansi:
+                line = remover.sub('', line)
+
+            locs['line'] = line
 
             if opts.split:
                 locs['data'] = line.split(opts.split_char)
