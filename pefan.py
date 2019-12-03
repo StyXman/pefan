@@ -391,7 +391,14 @@ if __name__ == '__main__':
 
         locs['file'] = file
 
-        for line in file:
+        while True:
+            try:
+                line = file.readline()
+            except (BrokenPipeError, KeyboardInterrupt):
+                # we're reading from stdin, and the proc at the other end of the pipe died
+                # bail out
+                break
+
             locs['line'] = chomp(line)
 
             if opts.split:
