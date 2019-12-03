@@ -48,9 +48,10 @@ optional arguments:
                         Automaticalle parse --foo switches. This creates a
                         variable called 'foo' with value True; --foo[=| ]bar
                         stores 'bar' in 'foo'.
-  -s SETUP, --setup SETUP
+  -s SETUP_SCRIPT, --setup SETUP_SCRIPT
                         Code to be run as setup. Run only once after importing
                         modules and before iterating over input.
+  --begin SETUP_SCRIPT  Same as -s|--setup.
   --test                Run internal test suite.
   -t [FORMAT], --timestamp [FORMAT]
                         Prepend a timestamp using FORMAT. By default prints it
