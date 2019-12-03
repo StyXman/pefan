@@ -206,6 +206,9 @@ def parse_opts():
                                                Automatic switches must be passed after all the other options
                                                recognized by pefan.''')
 
+    # this is quite difficult, next time
+    # parser.add_argument('-0', '--zero-delimited', action='store_true',
+    #                     help='''Input is delimited by \0's, not \n's.''')
     parser.add_argument('-A', '--append-logfile', default=None,
                         help='''Also log lines to a file, appending to the end.''')
     parser.add_argument('-a', '--split', action='store_true',
@@ -227,7 +230,7 @@ def parse_opts():
                                 MODULE or MODULE,NAME,... The latter uses the 'from MODULE import NAME, ...'
                                 variant. MODULE or NAMEs can have a :AS_NAME suffix.''')
     parser.add_argument('-m', dest='module_specs', metavar='MODULE_SPEC',
-                        action='append', default = [], help='''Same as [-M|--import]''')
+                        action='append', default=[], help='''Same as [-M|--import]''')
     parser.add_argument('-N', '--enumerate-lines', action='store_true', default=False,
                         help='''Prepend each line with its line number, like less -N does.''')
     parser.add_argument('-n', '--iterate', action='store_true', default=True,
