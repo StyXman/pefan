@@ -226,6 +226,8 @@ def parse_opts():
     parser.add_argument('-n', '--iterate', action='store_true', default=True,
                         help='''Iterate over all the lines of inputs. Each line is assigned in the
                                 'line' variable. This is the default.''')
+    parser.add_argument('-P', '--prefix', default=None,
+                        help='''Prefix each line with this text.''')
     parser.add_argument('-p', '--print', action='store_true', dest='print_lines', default=True,
                         help='''Print the resulting line. This is the default.''')
     parser.add_argument(      '--no-print', action='store_false', dest='print_lines',
@@ -410,6 +412,9 @@ if __name__ == '__main__':
 
             if ( opts.print_lines and (not opts.ignore_empty or line != '') and
                  (opts.random == 1 or random() < opts.random) ):
+
+                if opts.prefix:
+                    line = opts.prefix + " " + line
 
                 if opts.timestamp is not None:
                     time = datetime.now()
