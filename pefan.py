@@ -321,9 +321,9 @@ def automatic_switches(args):
 
 
 def chomp(s):
-    '''Remove trailing \n from s.'''
+    '''Remove trailing \n and \r from s.'''
     index = len(s)
-    while index > 0 and s[index - 1] == "\n":
+    while index > 0 and s[index - 1] in ('\n', '\r'):
         index -= 1
 
     return s[:index]
