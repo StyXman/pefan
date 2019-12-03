@@ -259,6 +259,10 @@ def parse_opts():
     parser.add_argument('-t', '--timestamp', nargs='?', metavar='FORMAT', default=None,
                         const='%Y-%m-%dT%H:%M:%S.%f%z',
                         help='''Prepend a timestamp using FORMAT. By default prints it in ISO-8601.''')
+    parser.add_argument('-T', '--tear-down', default=None, metavar='TEAR_DOWN_SCRIPT',
+                        help='''Code that runs after all input lines are processed.''')
+    parser.add_argument(      '--end', default=None, dest='tear_down', metavar='TEAR_DOWN_SCRIPT',
+                        help='''Same as -T|--tear-down.''')
 
     # parser.add_argument('files', nargs=argparse.REMAINDER, metavar='FILE',
     #                     help='''Files to process. If ommited or file name is '-', stdin is used. Notice
@@ -458,3 +462,6 @@ if __name__ == '__main__':
 
                 if logfile is not None:
                     logfile.write(line+'\n')
+
+    if opts.tear_down is not None:
+        exec(opts.tear_down, globs, locs)
