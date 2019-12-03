@@ -250,9 +250,11 @@ def parse_opts():
     parser.add_argument('-S', '--automatic-switches', action='store_true',
                         help='''Automaticalle parse --foo switches. This creates a variable called 'foo'
                                 with value True; --foo[=| ]bar stores 'bar' in 'foo'.''')
-    parser.add_argument('-s', '--setup', default=None,
+    parser.add_argument('-s', '--setup', default=None, metavar='SETUP_SCRIPT',
                         help='''Code to be run as setup. Run only once after importing modules and
                                 before iterating over input.''')
+    parser.add_argument(      '--begin', default=None, dest='setup', metavar='SETUP_SCRIPT',
+                        help='''Same as -s|--setup.''')
     parser.add_argument(      '--test', action='store_true', help='''Run internal test suite.''')
     parser.add_argument('-t', '--timestamp', nargs='?', metavar='FORMAT', default=None,
                         const='%Y-%m-%dT%H:%M:%S.%f%z',
