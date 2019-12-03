@@ -283,7 +283,7 @@ def parse_opts():
     if opts.split_char is not None:
         opts.split = True
 
-    opts.script = braced2python(opts.script)
+    # opts.script = braced2python(opts.script)
 
     if opts.setup is not None:
         opts.setup = braced2python(opts.setup)
