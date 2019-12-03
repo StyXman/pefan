@@ -206,7 +206,7 @@ def parse_opts():
                                 lements go in the 'data' variable.''')
     parser.add_argument(      '--debug', action='store_true',
                         help='''Enable debugging info in the stderr.''')
-    parser.add_argument('-e', '--script', default='',
+    parser.add_argument('-e', '--script', default=None,
                         help='''The script to run inside the loop.''')
     parser.add_argument('-F', '--split-char', default=None,
                         help='''The field delimiter. This implies [-a|--split].''')
@@ -406,9 +406,10 @@ if __name__ == '__main__':
             if opts.split:
                 locs['data'] = line.split(opts.split_char)
 
-            debug(repr(opts.script))
-            exec(opts.script, globs, locs)
-            line = locs['line']
+            if opts.script is not None:
+                debug(repr(opts.script))
+                exec(opts.script, globs, locs)
+                line = locs['line']
 
             if ( opts.print_lines and (not opts.ignore_empty or line != '') and
                  (opts.random == 1 or random() < opts.random) ):
