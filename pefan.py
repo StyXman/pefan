@@ -5,6 +5,7 @@ import argparse
 from random import random
 from datetime import datetime
 import re
+from time import monotonic as monotonic_time
 
 import logging
 from logging import debug, info, exception
@@ -60,7 +61,9 @@ def parse_opts():
     parser.add_argument(      '--no-print', action='store_false', dest='print_lines',
                         help='''Don't automatically print the resulting line, the script knows what
                                 to do with it''')
-    parser.add_argument('-r', '--random', type=float, default=1,
+    parser.add_argument('-r', '--relative', action='store_true', default=False,
+                        help='''Print a relative timestamp. This records the time difference between consecutive lines.''')
+    parser.add_argument(      '--random', type=float, default=1,
                         help='''Print only a fraction of the output lines.''')
     parser.add_argument('-R', '--remove-ansi', action='store_true',
                         help='''Remove ANSI escape sequences from the text.''')
@@ -226,6 +229,7 @@ if __name__ == '__main__':
         # world where the same range of bytes have a different meaning.
         remover = re.compile(r'''\x1B[@-_][0-?]*[ -/]*[@-~]''')
 
+
     for file in opts.files:
         if file == '-':
             file = sys.stdin
@@ -238,6 +242,9 @@ if __name__ == '__main__':
                     continue
 
         locs['file'] = file
+
+        if opts.relative:
+            start = monotonic_time()
 
         while True:
             try:
@@ -271,6 +278,11 @@ if __name__ == '__main__':
 
                 if opts.prefix:
                     line = opts.prefix + " " + line
+
+                if opts.relative:
+                    end = monotonic_time()
+                    line = "(%10.3f): %s" % (end-start, line)
+                    start = end
 
                 if opts.timestamp is not None:
                     time = datetime.now()
